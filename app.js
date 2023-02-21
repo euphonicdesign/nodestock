@@ -6,14 +6,23 @@ const {engine} = require('express-handlebars');
 const app = express();
 const path = require("path");
 const request = require('request');
+const bodyParser = require('body-parser');
 
 const PORT = process.env.PORT || 5000;
+
+
+// use body parser middleware
+app.use(bodyParser.urlencoded({extended: false}));
+
+
+
+
 
 // API KEY pk_7935fc5673e842daaf959588466c6d96
 //create call_api function
 
-function call_api(finishedAPI) {
-    request("https://cloud.iexapis.com/stable/stock/fb/quote?token=pk_7935fc5673e842daaf959588466c6d96", {json: true}, (err,res,body)=>{
+function call_api(finishedAPI, ticker) {
+    request("https://cloud.iexapis.com/stable/stock/"+ticker+"/quote?token=pk_7935fc5673e842daaf959588466c6d96", {json: true}, (err,res,body)=>{
         if (err) {
             return console.log(err);
         }
@@ -33,7 +42,7 @@ app.set('views', './views');
 
 const otherstuff = "hello there, this is other stuff!";
 
-//Set handlebar routes
+//Set handlebar index GET route
 app.get('/', (req, res) => {
     call_api(function(doneAPI){
         res.render('home', {
@@ -42,10 +51,28 @@ app.get('/', (req, res) => {
     });    
 });
 
+
+// call_api(function, req.body.stock_ticker)
+
+
+//Set handlebar index POST route
+app.post('/', (req, res) => {
+    call_api(function(doneAPI){
+        // posted_stuff = req.body.stock_ticker;
+
+        res.render('home', {
+            stock: doneAPI,
+            // posted_stuff: posted_stuff
+        });
+    }, req.body.stock_ticker);    
+});
+
 // create about page route
 app.get('/about.html', (req, res) => {
     res.render('about');
 });
+
+
 
 // Set static folder
 app.use(express.static(path.join(__dirname, "public")));
